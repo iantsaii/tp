@@ -1,0 +1,80 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":SetPriorityCommandParser" as SetPriorityCommandParser LOGIC_COLOR
+participant "d:SetPriorityCommand" as SetPriorityCommand LOGIC_COLOR
+participant ":CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant ":Model" as Model MODEL_COLOR
+end box
+
+box Storage STORAGE_COLOR_T1
+participant ":Storage" as Storage STORAGE_COLOR
+end box
+
+[-> LogicManager : execute(\n"bprio 2 high")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand(\n"bprio 2 high")
+activate AddressBookParser
+
+create SetPriorityCommandParser
+AddressBookParser -> SetPriorityCommandParser
+activate SetPriorityCommandParser
+
+SetPriorityCommandParser --> AddressBookParser
+deactivate SetPriorityCommandParser
+
+AddressBookParser -> SetPriorityCommandParser : parse("2 high")
+activate SetPriorityCommandParser
+
+create SetPriorityCommand
+SetPriorityCommandParser -> SetPriorityCommand
+activate SetPriorityCommand
+
+SetPriorityCommand --> SetPriorityCommandParser : command
+deactivate SetPriorityCommand
+
+SetPriorityCommandParser --> AddressBookParser : command
+deactivate SetPriorityCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+SetPriorityCommandParser -[hidden]-> AddressBookParser
+destroy SetPriorityCommandParser
+
+AddressBookParser --> LogicManager : command
+deactivate AddressBookParser
+
+LogicManager -> SetPriorityCommand : execute()
+activate SetPriorityCommand
+
+SetPriorityCommand -> Model : setBuyer(old, new)
+activate Model
+
+Model --> SetPriorityCommand
+deactivate Model
+
+create CommandResult
+SetPriorityCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> SetPriorityCommand
+deactivate CommandResult
+
+SetPriorityCommand --> LogicManager : result
+deactivate SetPriorityCommand
+
+LogicManager -> Storage : saveAddressBook(curAddressBook)
+activate Storage
+
+Storage --> LogicManager
+deactivate Storage
+
+[<--LogicManager
+deactivate LogicManager
+@enduml

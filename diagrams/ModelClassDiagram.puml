@@ -3,6 +3,8 @@
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR
 skinparam classBackgroundColor MODEL_COLOR
+skinparam BackgroundColor MODEL_COLOR
+skinparam PackageColor MODEL_COLOR
 
 Package Model as ModelPackage <<Rectangle>>{
 Class "<<interface>>\nReadOnlyAddressBook" as ReadOnlyAddressBook
@@ -12,8 +14,14 @@ Class AddressBook
 Class ModelManager
 Class UserPrefs
 
-Class UniquePersonList
-Class Person
+Class UniqueDisplayableList<? extends Displayable>
+Class Seller implements "<<interface>>\nDisplayable"
+Class Buyer implements "<<interface>>\nDisplayable"
+Class "<<interface>>\nDisplayable"
+Class "UniqueDisplayableList<Seller>" as SellerList
+Class "UniqueDisplayableList<Buyer>" as BuyerList
+Class HouseInfo
+Class "{abstract}\nPerson" as Person
 Class Address
 Class Email
 Class Name
@@ -23,32 +31,45 @@ Class Tag
 Class I #FFFFFF
 }
 
-Class HiddenOutside #FFFFFF
+Class HiddenOutside
+hide HiddenOutside
 HiddenOutside ..> Model
 
 AddressBook .up.|> ReadOnlyAddressBook
 
 ModelManager .up.|> Model
-Model .right.> ReadOnlyUserPrefs
-Model .left.> ReadOnlyAddressBook
+Model .left.> ReadOnlyUserPrefs
+Model .right.> ReadOnlyAddressBook
 ModelManager -left-> "1" AddressBook
 ModelManager -right-> "1" UserPrefs
 UserPrefs .up.|> ReadOnlyUserPrefs
 
-AddressBook *--> "1" UniquePersonList
-UniquePersonList --> "~* all" Person
+BuyerList <.down. UniqueDisplayableList : <<bind>> ?:Buyer
+SellerList <.down. UniqueDisplayableList : <<bind>> ?:Seller
+AddressBook *--> "1" SellerList
+AddressBook *--> "1" BuyerList
+BuyerList --> "~* all" Buyer
+SellerList --> "~* all" Seller
+
+Seller *--> HouseInfo
+Buyer *--> HouseInfo
+Seller *--> Address
+
+Person <|-up- Seller
+Person <|-up- Buyer
 Person *--> Name
 Person *--> Phone
 Person *--> Email
 Person *--> Address
 Person *--> "*" Tag
 
-Person -[hidden]up--> I
-UniquePersonList -[hidden]right-> I
 
 Name -[hidden]right-> Phone
 Phone -[hidden]right-> Address
 Address -[hidden]right-> Email
 
-ModelManager --> "~* filtered" Person
+ModelManager --> "~* filtered/sorted" Seller
+ModelManager --> "~* filtered/sorted" Buyer
+
+UniqueDisplayableList <|.. "<<interface>>\nDisplayable"
 @enduml

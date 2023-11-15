@@ -1,0 +1,111 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":SortBuyerCommandParser" as SortBuyerCommandParser LOGIC_COLOR
+participant "sortOrder:SortOrder" as SortOrder LOGIC_COLOR
+participant "<<class>>\nBuyerComparator" as BuyerComparator LOGIC_COLOR
+participant ":SortBuyerCommand" as SortBuyerCommand LOGIC_COLOR
+participant ":CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant ":Model" as Model MODEL_COLOR
+end box
+
+box Storage STORAGE_COLOR_T1
+participant ":Storage" as Storage MODEL_COLOR
+end box
+
+[-> LogicManager : execute("bsort n/d")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand("bsort n/d")
+activate AddressBookParser
+
+create SortBuyerCommandParser
+AddressBookParser -> SortBuyerCommandParser
+activate SortBuyerCommandParser
+
+SortBuyerCommandParser --> AddressBookParser
+deactivate SortBuyerCommandParser
+
+AddressBookParser -> SortBuyerCommandParser : parse("n/d")
+activate SortBuyerCommandParser
+
+alt prefix is n/, ah/, i/ or prio/
+
+    create SortOrder
+    SortBuyerCommandParser -> SortOrder
+    activate SortOrder
+
+    SortOrder --> SortBuyerCommandParser
+    deactivate SortOrder
+
+    SortBuyerCommandParser -> BuyerComparator : of(n/, sortOrder)
+    activate BuyerComparator
+
+    BuyerComparator --> SortBuyerCommandParser : comparator
+    deactivate BuyerComparator
+
+    create SortBuyerCommand
+    SortBuyerCommandParser -> SortBuyerCommand : SortBuyerCommand(comparator)
+    activate SortBuyerCommand
+
+    SortBuyerCommand --> SortBuyerCommandParser : command
+    deactivate SortBuyerCommand
+
+else else
+
+    SortBuyerCommandParser -> BuyerComparator : of()
+    activate BuyerComparator
+
+    BuyerComparator --> SortBuyerCommandParser : comparator
+    deactivate BuyerComparator
+
+    create SortBuyerCommand
+    SortBuyerCommandParser -> SortBuyerCommand : SortBuyerCommand(comparator)
+    activate SortBuyerCommand
+
+    SortBuyerCommand --> SortBuyerCommandParser : command
+    deactivate SortBuyerCommand
+
+end
+
+SortBuyerCommandParser --> AddressBookParser : command
+deactivate SortBuyerCommandParser
+
+AddressBookParser --> LogicManager : command
+deactivate AddressBookParser
+
+LogicManager -> SortBuyerCommand : execute()
+activate SortBuyerCommand
+
+SortBuyerCommand -> Model : updateFilteredSortedBuyerList(comparator)
+activate Model
+
+Model --> SortBuyerCommand
+deactivate Model
+
+create CommandResult
+SortBuyerCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> SortBuyerCommand
+deactivate CommandResult
+
+SortBuyerCommand --> LogicManager : result
+deactivate SortBuyerCommand
+
+LogicManager -> Storage : saveAddressBook(curAddressBook)
+activate Storage
+
+Storage --> LogicManager
+deactivate Storage
+
+[<--LogicManager
+deactivate LogicManager
+@enduml

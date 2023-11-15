@@ -16,14 +16,17 @@ Class ParserUtil
 Class ArgumentMultimap
 Class ArgumentTokenizer
 Class Prefix
+Class CommandWarnings
 }
 
 Class HiddenOutside #FFFFFF
 HiddenOutside ..> AddressBookParser
 
 AddressBookParser .down.> XYZCommandParser: creates >
+AddressBookParser ..> CommandWarnings : creates >
 
 XYZCommandParser ..> XYZCommand : creates >
+XYZCommandParser .left.> CommandWarnings : edits >
 AddressBookParser ..> Command : returns >
 XYZCommandParser .up.|> Parser
 XYZCommandParser ..> ArgumentMultimap
